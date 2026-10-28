@@ -1,0 +1,16 @@
+[package]
+name = "healthcraft-terminology"
+description = "Clinical code systems (LOINC, SNOMED CT, RxNorm, ICD-10-CM, CPT) and deployment-time terminology loading"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

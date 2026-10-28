@@ -1,0 +1,22 @@
+[package]
+name = "healthcraft-api"
+description = "HealthCraft's HTTP API: FHIR R4 read routes and command dispatch, behind bearer-token auth"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-engine = { workspace = true }
+healthcraft-store = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+healthcraft-testkit = { workspace = true }
+tower = { workspace = true, features = ["util"] }

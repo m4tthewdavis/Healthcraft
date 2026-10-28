@@ -1,0 +1,26 @@
+HealthCraft
+Copyright (c) 2026 the HealthCraft contributors.
+Licensed under the MIT License or the Apache License, Version 2.0, at your option
+(LICENSE-MIT, LICENSE-APACHE).
+
+Clinical terminologies are not part of this distribution
+
+HealthCraft's code is open source. Several clinical code systems it can use are not, and none of
+their content is in this repository:
+
+- CPT® is owned by the American Medical Association and needs a license from the AMA.
+- SNOMED CT is licensed through SNOMED International (free in member countries such as the US via
+  the UMLS Metathesaurus License); it may not be redistributed here.
+- Commercial drug knowledge bases (for example First Databank, Medi-Span) are licensed by their
+  vendors.
+- LOINC, RxNorm and ICD-10-CM are available without fee under their own terms; their files are
+  still loaded at deployment time rather than bundled.
+
+Each deployment loads the terminology files it is licensed to use (see
+crates/terminology/README.md).
+
+Not a medical device
+
+HealthCraft is pre-release software under active development. It is not certified health IT
+(ONC/ASTP), not cleared by the FDA or any other regulator, and must not be used to make clinical
+decisions or to store real patient data. Use synthetic data only.

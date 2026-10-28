@@ -1,0 +1,5 @@
+# Panicking and unchecked indexing are allowed in tests only (AGENTS.md › Never crash).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-indexing-slicing-in-tests = true

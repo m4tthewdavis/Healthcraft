@@ -1,0 +1,66 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*", "xtask"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.95"
+repository = "https://github.com/m4tthewdavis/healthcraft"
+
+[workspace.dependencies]
+# internal
+healthcraft-core = { path = "crates/core" }
+healthcraft-terminology = { path = "crates/terminology" }
+healthcraft-hl7v2 = { path = "crates/hl7v2" }
+healthcraft-record = { path = "crates/record" }
+healthcraft-store = { path = "crates/store" }
+healthcraft-audit = { path = "crates/audit" }
+healthcraft-fhir = { path = "crates/fhir" }
+healthcraft-research = { path = "crates/research" }
+healthcraft-engine = { path = "crates/engine" }
+healthcraft-api = { path = "crates/api" }
+healthcraft-ui-egui = { path = "crates/ui-egui" }
+healthcraft-testkit = { path = "crates/testkit" }
+
+# external
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# All date/time handling goes through chrono (AGENTS.md); no hand-rolled calendar math.
+chrono = { version = "0.4", default-features = false, features = ["std", "serde"] }
+uuid = { version = "1", features = ["serde"] }
+sha2 = "0.10"
+clap = { version = "4", features = ["derive", "env"] }
+log = "0.4"
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tower = "0.5"
+egui = { version = "0.37", default-features = false }
+eframe = { version = "0.37", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+unimplemented = "deny"
+unreachable = "deny"
+indexing_slicing = "deny"
+
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+[profile.dev]
+opt-level = 1
+debug = "line-tables-only"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

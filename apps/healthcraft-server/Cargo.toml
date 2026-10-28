@@ -1,0 +1,18 @@
+[package]
+name = "healthcraft-server"
+description = "HealthCraft server: the HTTP API (FHIR R4 + commands) over an in-memory store"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-engine = { workspace = true }
+healthcraft-api = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+serde_json = { workspace = true }

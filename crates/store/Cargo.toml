@@ -1,0 +1,18 @@
+[package]
+name = "healthcraft-store"
+description = "Append-only event storage with optimistic concurrency; rejects events the record cannot accept"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-record = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+healthcraft-terminology = { workspace = true }
+chrono = { workspace = true }

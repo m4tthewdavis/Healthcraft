@@ -1,0 +1,19 @@
+[package]
+name = "healthcraft-research"
+description = "Research projections of the record: OMOP CDM tables and HIPAA Safe Harbor de-identification"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-terminology = { workspace = true }
+healthcraft-record = { workspace = true }
+serde = { workspace = true }
+chrono = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

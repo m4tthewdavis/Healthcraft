@@ -1,0 +1,13 @@
+[package]
+name = "healthcraft-hl7v2"
+description = "A hardened HL7 version 2 message parser (pipe-delimited lab, ADT and order messages)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }

@@ -1,0 +1,26 @@
+[package]
+name = "healthcraft-engine"
+description = "Session and command registry: every HealthCraft action is an authorized, audited command"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-terminology = { workspace = true }
+healthcraft-hl7v2 = { workspace = true }
+healthcraft-record = { workspace = true }
+healthcraft-store = { workspace = true }
+healthcraft-audit = { workspace = true }
+healthcraft-fhir = { workspace = true }
+healthcraft-research = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+healthcraft-testkit = { workspace = true }

@@ -1,0 +1,15 @@
+[package]
+name = "healthcraft-audit"
+description = "A tamper-evident (hash-chained) access log: who read or changed which record, when"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+serde = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }

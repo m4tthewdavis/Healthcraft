@@ -1,0 +1,15 @@
+[package]
+name = "healthcraft-testkit"
+description = "Test helpers: deterministic sessions, actors and the synthetic fixtures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-store = { workspace = true }
+healthcraft-engine = { workspace = true }

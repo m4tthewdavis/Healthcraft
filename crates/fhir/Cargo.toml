@@ -1,0 +1,18 @@
+[package]
+name = "healthcraft-fhir"
+description = "FHIR R4 resources: the chart as Patient/Encounter/Observation/Condition, and FHIR bundle (Synthea) import"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-terminology = { workspace = true }
+healthcraft-record = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }

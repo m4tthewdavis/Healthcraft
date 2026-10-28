@@ -1,0 +1,21 @@
+[package]
+name = "healthcraft-cli"
+description = "HealthCraft command line: import, inspect, export OMOP, de-identify, parse HL7 v2"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "healthcraft-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-engine = { workspace = true }
+healthcraft-hl7v2 = { workspace = true }
+healthcraft-research = { workspace = true }
+clap = { workspace = true }
+serde_json = { workspace = true }

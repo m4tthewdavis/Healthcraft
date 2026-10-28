@@ -1,0 +1,11 @@
+/target
+target/
+/dist
+/log
+/plan
+/secrets
+/data
+/terminology
+*.log
+.env
+.env.*
