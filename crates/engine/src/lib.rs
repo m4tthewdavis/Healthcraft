@@ -24,6 +24,7 @@ use serde_json::Value;
 
 mod admin_cmds;
 mod clinical_cmds;
+pub mod demo;
 mod fhir_cmds;
 mod import_cmds;
 mod patient_cmds;
@@ -134,6 +135,11 @@ impl Session {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn in_memory() -> Self {
         Self::new(Arc::new(healthcraft_store::InMemoryStore::default()), Arc::new(healthcraft_core::SystemClock), Arc::new(healthcraft_core::RandomIds))
+    }
+
+    /// The session's current time (what new events will be stamped with).
+    pub fn now(&self) -> healthcraft_core::Timestamp {
+        self.clock.now()
     }
 
     pub fn audit_log(&self) -> &AuditLog {

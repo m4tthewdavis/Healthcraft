@@ -2,7 +2,8 @@
 
 HealthCraft is an open-source, research-native electronic health record written in **Rust only**
 (no JavaScript or TypeScript). **No Tauri, Electron or webview shells:** the desktop app is native
-egui/eframe on wgpu, and a future browser build is the same Rust compiled to WebAssembly. The
+egui/eframe on wgpu, and the browser build (`apps/healthcraft-web`) is the same Rust compiled to
+WebAssembly. The
 product name is always written **HealthCraft** in user-facing text; machine names stay lowercase
 (`healthcraft-*` crates, binaries, ids). Read this file first, then `docs/`.
 
@@ -29,8 +30,8 @@ crates/
   engine              L4  Session + command registry: authorize, run, audit
   api ui-egui         L5  axum HTTP API · egui clinician UI
   testkit                 test helpers (dev-dependency only)
-apps/                     healthcraft (desktop), healthcraft-server, healthcraft-cli
-xtask/                    cargo xtask layers | wasm | ci
+apps/                     healthcraft (desktop), healthcraft-web (browser), healthcraft-server, healthcraft-cli
+xtask/                    cargo xtask layers | wasm | web | ci
 fixtures/                 synthetic test data only
 ```
 

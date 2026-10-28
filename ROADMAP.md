@@ -29,18 +29,20 @@ health infrastructure.
 |---|---|---|
 | M0 | **Foundations:** event-sourced record, store with optimistic concurrency, command engine with roles and a hash-chained access log, FHIR R4 read + bundle import, HL7 v2 ORU import, OMOP export, Safe Harbor de-identification, egui chart, HTTP API, CLI, CI | ✅ |
 | M1 | **Durable and secure:** PostgreSQL event store; durable, write-once access log; encryption at rest; TLS; SMART on FHIR / OAuth 2.0 sign-in; per-patient consent and care-team scoping; break-the-glass | next |
-| M2 | **Usable outpatient chart:** write workflows in the UI (register, visits, vitals, problem list); clinical notes; medications and allergies; orders and results; scheduling; LOINC/SNOMED/RxNorm loaders; HL7 v2 ADT and ORM | |
+| M2 | **Usable outpatient chart:** write workflows in the UI (register, visits, vitals, problem list); clinical notes; medications and allergies; orders and results; scheduling; LOINC/SNOMED/RxNorm loaders; HL7 v2 ADT and ORM | started: visits and signed notes in the UI |
 | M3 | **Research module:** cohort builder over the live OMOP projection; OHDSI vocabulary mapping; trial eligibility matching; consent tracking; electronic data capture for studies; de-identified exports with provenance | |
 | M4 | **Pilot** with one clinical research site on synthetic, then real, data (after M1 security review) | |
 | M5 | **Revenue cycle:** charge capture, X12 837/835 claims, eligibility (270/271) | |
 | M6 | **Certification:** ONC Health IT certification (US Core, USCDI, SMART App Launch, Bulk FHIR `$export`, quality measures); e-prescribing (Surescripts) and EPCS; SOC 2 | |
 | M7 | **Agents:** MCP server over the same commands; agents draft, clinicians sign | |
-| M8 | **Browser build** of the clinician UI (WebAssembly) | |
+| M8 | **Browser build** of the clinician UI (WebAssembly) | ✅ demo (in-memory, synthetic); a hosted build follows M1 |
 
 ## Known gaps in what exists
 
 - FHIR: read-only; no search parameters beyond listing patients; no CapabilityStatement; component
-  observations (blood pressure panels) are skipped on import.
+  observations (blood pressure panels) are skipped on import; notes are not exported as
+  DocumentReference yet.
+- Notes: no addenda or co-signature yet; signing is final.
 - Store: replays the whole stream on every append (fine for now; snapshots come with PostgreSQL).
 - De-identification: Safe Harbor only; no expert-determination support; the ZIP3 list is from the
   2000 Census as published by HHS and needs re-checking.

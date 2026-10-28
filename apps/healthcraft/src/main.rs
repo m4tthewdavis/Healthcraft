@@ -1,6 +1,7 @@
 //! HealthCraft desktop: the clinician UI in a native window, over an in-memory session.
 //!
-//! Starts with the synthetic fixture patient loaded (or the FHIR bundles given with `--import`).
+//! Starts with the synthetic fixture patient and demo cohort loaded (or the FHIR bundles given
+//! with `--import`).
 //! Nothing is saved: this is a demo shell until the durable store lands (docs/roadmap.md).
 
 use std::path::PathBuf;
@@ -26,7 +27,7 @@ enum RoleArg {
 #[derive(Parser)]
 #[command(name = "healthcraft", version, about = "HealthCraft desktop (synthetic data only)")]
 struct Args {
-    /// FHIR bundles to load instead of the built-in synthetic patient (e.g. Synthea output).
+    /// FHIR bundles to load instead of the built-in synthetic patients (e.g. Synthea output).
     #[arg(long, value_name = "BUNDLE.json")]
     import: Vec<PathBuf>,
     /// Who you are in this session.
@@ -65,6 +66,9 @@ fn load(session: &Session, args: &Args) -> Result<(), String> {
     };
     for bundle in bundles {
         session.dispatch(&system, "import.fhirBundle", &json!({ "bundle": bundle })).map_err(|e| e.to_string())?;
+    }
+    if args.import.is_empty() {
+        healthcraft_engine::demo::seed(session).map_err(|e| e.to_string())?;
     }
     Ok(())
 }

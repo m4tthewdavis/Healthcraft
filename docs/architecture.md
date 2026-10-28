@@ -40,10 +40,14 @@ deterministic (time and ids are injected through `Clock` and `IdSource`) and com
 ## The record (`crates/record`)
 
 - `ClinicalEvent`: `PatientRegistered`, `DemographicsAmended`, `EncounterOpened`,
-  `EncounterClosed`, `ObservationRecorded`, `ObservationEnteredInError`, `ConditionRecorded`.
+  `EncounterClosed`, `ObservationRecorded`, `ObservationEnteredInError`, `ConditionRecorded`,
+  `NoteSigned`.
 - `RecordedEvent`: an event plus its 1-based sequence in the stream, time and `Actor`.
 - `Chart::apply` validates an event against the current chart (registered first, encounters open
-  before use, no duplicates, no writes into a closed encounter) and is the only way state changes.
+  before use, no duplicates, no results into a closed encounter, visits never end before they
+  start, notes only on visits that exist) and is the only way state changes.
+- Notes are free text, so de-identification never copies them (`research::deid` builds its output
+  from an allow-list of fields).
 
 ## Storage (`crates/store`)
 

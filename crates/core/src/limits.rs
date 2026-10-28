@@ -7,6 +7,8 @@ use crate::CoreError;
 pub const MAX_SHORT_TEXT: usize = 256;
 /// Free text such as a reason or a short note.
 pub const MAX_LONG_TEXT: usize = 16 * 1024;
+/// The body of a clinical note.
+pub const MAX_NOTE_TEXT: usize = 64 * 1024;
 /// Repeated items in one value (given names, address lines).
 pub const MAX_ITEMS: usize = 16;
 

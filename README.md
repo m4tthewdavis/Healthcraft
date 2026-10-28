@@ -38,7 +38,7 @@ export that is stale by the time it arrives. HealthCraft builds research into th
 
 | Area | Status |
 |---|---|
-| Event-sourced clinical record (patients, encounters, observations, problem list, amendments, entered-in-error) | ✅ with invariants enforced on every write |
+| Event-sourced clinical record (patients, encounters, observations, problem list, signed notes, amendments, entered-in-error) | ✅ with invariants enforced on every write |
 | Optimistic concurrency (two clinicians can never silently overwrite each other) | ✅ |
 | Role-based access (clinician, researcher, admin, system) on every command | ✅ |
 | Tamper-evident, hash-chained access log of every call, including refusals | ✅ |
@@ -47,19 +47,23 @@ export that is stale by the time it arrives. HealthCraft builds research into th
 | HL7 v2 parser (hardened) and ORU^R01 lab-result import | ✅ |
 | OMOP CDM v5.4 export (person, visit, measurement, observation, condition) as CSV | ✅ source codes; standard concepts need the OHDSI vocabulary |
 | HIPAA Safe Harbor de-identification (dates to year, 90+ ages, ZIP3, free text removed, random research ids) | ✅ |
-| Desktop clinician UI (egui) | ✅ patient list + read-only chart |
+| Clinician UI (egui), desktop and browser (WebAssembly) | ✅ patient banner; Summary, Encounters, Notes and Results (flowsheet) tabs; start and end visits; write and sign notes; de-identified research view; access log; demo role switcher |
 | HTTP API (FHIR routes + command dispatch, bearer tokens) | ✅ development-grade auth |
-| Durable storage, SMART on FHIR / OAuth, orders, notes, scheduling, billing, e-prescribing | ⏳ see [ROADMAP.md](ROADMAP.md) |
+| Durable storage, SMART on FHIR / OAuth, orders, medications, scheduling, billing, e-prescribing | ⏳ see [ROADMAP.md](ROADMAP.md) |
 
 ## Get started
 
 You need a Rust toolchain (1.95+).
 
 ```sh
-cargo test --workspace                 # 58 tests, including a fuzz pass over every command
+cargo test --workspace                 # unit and integration tests, including a fuzz pass over every command
 
-# Desktop app, preloaded with a synthetic patient
+# Desktop app, preloaded with synthetic patients
 cargo run -p healthcraft
+
+# Browser app (needs wasm-bindgen-cli at the version in Cargo.lock)
+rustup target add wasm32-unknown-unknown
+cargo xtask web && python3 -m http.server -d dist/web
 
 # HTTP API
 export HEALTHCRAFT_TOKEN_CLINICIAN=$(openssl rand -hex 32)
@@ -95,11 +99,12 @@ apps/
   healthcraft              desktop app (eframe on wgpu)
   healthcraft-server       HTTP API server
   healthcraft-cli          command line
-xtask/                     cargo xtask layers | wasm | ci
+  healthcraft-web          the same UI in the browser (WebAssembly, WebGL2)
+xtask/                     cargo xtask layers | wasm | web | ci
 ```
 
-- **Rust only.** No JavaScript, no webview shells. The UI is native egui; L0–L4 also compile to
-  WebAssembly (`cargo xtask wasm`), which keeps a browser build open.
+- **Rust only.** No hand-written JavaScript, no webview shells. The UI is egui, natively on the
+  desktop and compiled to WebAssembly in the browser; `wasm-bindgen` generates the small loader.
 - **Never crash.** Non-test code may not `unwrap`, `expect`, `panic!` or index unchecked (enforced by
   clippy), and `unsafe` is forbidden workspace-wide.
 - **Layering is enforced** by `cargo xtask layers`: the domain (L0–L4) cannot depend on UI, async or
