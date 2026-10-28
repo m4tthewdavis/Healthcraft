@@ -24,6 +24,7 @@ use serde_json::Value;
 
 mod admin_cmds;
 mod clinical_cmds;
+pub mod demo;
 mod fhir_cmds;
 mod import_cmds;
 mod patient_cmds;

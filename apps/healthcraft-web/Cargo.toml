@@ -1,0 +1,30 @@
+[package]
+name = "healthcraft-web"
+description = "HealthCraft in the browser: the clinician UI compiled to WebAssembly (eframe web runner, WebGL2)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "healthcraft-web"
+path = "src/main.rs"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+healthcraft-core = { workspace = true }
+healthcraft-engine = { workspace = true }
+healthcraft-store = { workspace = true }
+healthcraft-ui-egui = { workspace = true }
+eframe = { workspace = true, features = ["glow", "default_fonts"] }
+egui = { workspace = true }
+log = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+serde_json = { workspace = true }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlCanvasElement", "Crypto"] }

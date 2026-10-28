@@ -1,0 +1,60 @@
+<title>HealthCraft</title>
+<style>
+  /* One-screen app: the egui canvas fills the frame; the page only frames it while it loads. */
+  :root {
+    --bg: #f3f5f8;
+    --fg: #1d2430;
+    --muted: #5d6675;
+    --accent: #2f6fde;
+    --warn: #9a6a12;
+    --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #1b1d21; --fg: #e4e7ec; --muted: #9aa2ae; --accent: #6e9ff5; --warn: #e0b45c; color-scheme: dark; }
+  }
+  :root[data-theme="dark"] { --bg: #1b1d21; --fg: #e4e7ec; --muted: #9aa2ae; --accent: #6e9ff5; --warn: #e0b45c; color-scheme: dark; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); overflow: hidden; }
+  #healthcraft_canvas {
+    position: fixed;
+    top: env(safe-area-inset-top, 0px); bottom: env(safe-area-inset-bottom, 0px);
+    left: env(safe-area-inset-left, 0px); right: env(safe-area-inset-right, 0px);
+    width: calc(100% - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+    height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    display: block; outline: none;
+  }
+  #healthcraft_loading {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; text-align: center; pointer-events: none;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  #healthcraft_loading h1 { margin: 0; font-size: 22px; letter-spacing: 0.01em; color: var(--accent); text-wrap: balance; }
+  #healthcraft_loading p { margin: 0; max-width: 46ch; line-height: 1.5; color: var(--muted); }
+  #healthcraft_loading .note { color: var(--warn); font-size: 13px; }
+  #healthcraft_stalled { visibility: hidden; animation: hc-stalled 0s 25s forwards; }
+  @keyframes hc-stalled { to { visibility: visible; } }
+  @media (prefers-reduced-motion: reduce) { #healthcraft_stalled { animation-duration: 0s; } }
+</style>
+
+<canvas id="healthcraft_canvas"></canvas>
+<div id="healthcraft_loading" role="status">
+  <h1>HealthCraft</h1>
+  <p>Loading the record engine (about 5 MB)&hellip;</p>
+  <p class="note">Synthetic patients only. Not for clinical use.</p>
+  <p id="healthcraft_stalled">This is taking longer than expected. Reload the page to try again; it needs a browser with WebAssembly and WebGL2.</p>
+</div>
+
+<script type="module">
+  import init from "./healthcraft-web.js";
+  init({ module_or_path: new URL("./healthcraft-web_bg.wasm", import.meta.url) }).catch((error) => {
+    const box = document.getElementById("healthcraft_loading");
+    if (box) {
+      box.replaceChildren();
+      const title = document.createElement("h1");
+      title.textContent = "HealthCraft could not start";
+      const detail = document.createElement("p");
+      detail.textContent = "Your browser blocked or failed to load the WebAssembly module: " + String(error);
+      box.append(title, detail);
+    }
+  });
+</script>

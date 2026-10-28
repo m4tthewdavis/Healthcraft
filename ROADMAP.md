@@ -35,7 +35,7 @@ health infrastructure.
 | M5 | **Revenue cycle:** charge capture, X12 837/835 claims, eligibility (270/271) | |
 | M6 | **Certification:** ONC Health IT certification (US Core, USCDI, SMART App Launch, Bulk FHIR `$export`, quality measures); e-prescribing (Surescripts) and EPCS; SOC 2 | |
 | M7 | **Agents:** MCP server over the same commands; agents draft, clinicians sign | |
-| M8 | **Browser build** of the clinician UI (WebAssembly) | |
+| M8 | **Browser build** of the clinician UI (WebAssembly) | ✅ demo (in-memory, synthetic); a hosted build follows M1 |
 
 ## Known gaps in what exists
 
