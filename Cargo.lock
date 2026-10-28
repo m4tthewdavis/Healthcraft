@@ -1709,6 +1709,7 @@ dependencies = [
 name = "healthcraft-ui-egui"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "egui",
  "healthcraft-core",
  "healthcraft-engine",

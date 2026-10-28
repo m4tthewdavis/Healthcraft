@@ -13,8 +13,8 @@
 use std::collections::BTreeMap;
 
 use chrono::NaiveDate;
-use healthcraft_core::limits::{self, MAX_ITEMS, MAX_LONG_TEXT, MAX_SHORT_TEXT};
-use healthcraft_core::{Actor, ConditionId, CoreError, EncounterId, EventId, ObservationId, PatientId, Timestamp};
+use healthcraft_core::limits::{self, MAX_ITEMS, MAX_LONG_TEXT, MAX_NOTE_TEXT, MAX_SHORT_TEXT};
+use healthcraft_core::{Actor, ConditionId, CoreError, EncounterId, EventId, NoteId, ObservationId, PatientId, Timestamp};
 use healthcraft_terminology::{Coding, TerminologyError};
 use serde::{Deserialize, Serialize};
 
@@ -40,6 +40,12 @@ pub enum RecordError {
     UnknownObservation(ObservationId),
     #[error("condition {0} already exists")]
     DuplicateCondition(ConditionId),
+    #[error("encounter {0} does not exist on this record")]
+    UnknownEncounter(EncounterId),
+    #[error("encounter {0} cannot end before it starts")]
+    EndBeforeStart(EncounterId),
+    #[error("note {0} already exists")]
+    DuplicateNote(NoteId),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -180,6 +186,9 @@ pub enum ClinicalEvent {
     ObservationEnteredInError { patient: PatientId, observation: ObservationId, reason: String },
     #[serde(rename_all = "camelCase")]
     ConditionRecorded { patient: PatientId, condition: ConditionId, code: Coding, onset: Option<NaiveDate> },
+    /// A signed note. Signing is final: corrections are addenda (a later note), never edits.
+    #[serde(rename_all = "camelCase")]
+    NoteSigned { patient: PatientId, note: NoteId, encounter: Option<EncounterId>, title: String, text: String, signed: Timestamp },
 }
 
 impl ClinicalEvent {
@@ -191,7 +200,8 @@ impl ClinicalEvent {
             | Self::EncounterClosed { patient, .. }
             | Self::ObservationRecorded { patient, .. }
             | Self::ObservationEnteredInError { patient, .. }
-            | Self::ConditionRecorded { patient, .. } => *patient,
+            | Self::ConditionRecorded { patient, .. }
+            | Self::NoteSigned { patient, .. } => *patient,
         }
     }
 
@@ -215,6 +225,10 @@ impl ClinicalEvent {
             }
             Self::ObservationEnteredInError { reason, .. } => Ok(limits::check_required("reason", reason, MAX_LONG_TEXT)?),
             Self::ConditionRecorded { code, .. } => Ok(code.validate()?),
+            Self::NoteSigned { title, text, .. } => {
+                limits::check_required("title", title, MAX_SHORT_TEXT)?;
+                Ok(limits::check_required("text", text, MAX_NOTE_TEXT)?)
+            }
         }
     }
 }
@@ -256,6 +270,18 @@ pub struct Observation {
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Note {
+    pub id: NoteId,
+    pub encounter: Option<EncounterId>,
+    pub title: String,
+    pub text: String,
+    /// Who signed it (the actor of the event).
+    pub author: String,
+    pub signed: Timestamp,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Condition {
     pub id: ConditionId,
     pub code: Coding,
@@ -272,6 +298,8 @@ pub struct Chart {
     /// In recording order.
     pub observations: Vec<Observation>,
     pub conditions: Vec<Condition>,
+    /// In signing order.
+    pub notes: Vec<Note>,
     /// How many events the chart was built from (the stream's version).
     pub version: u64,
     pub last_updated: Timestamp,
@@ -302,6 +330,7 @@ impl Chart {
             encounters: BTreeMap::new(),
             observations: Vec::new(),
             conditions: Vec::new(),
+            notes: Vec::new(),
             version: 1,
             last_updated: recorded.recorded_at,
         })
@@ -325,6 +354,7 @@ impl Chart {
                 self.encounters.insert(*encounter, Encounter { id: *encounter, class: *class, start: *start, end: None, reason: reason.clone() });
             }
             ClinicalEvent::EncounterClosed { encounter, end, .. } => match self.encounters.get_mut(encounter) {
+                Some(e) if e.end.is_none() && *end < e.start => return Err(RecordError::EndBeforeStart(*encounter)),
                 Some(e) if e.end.is_none() => e.end = Some(*end),
                 _ => return Err(RecordError::EncounterNotOpen(*encounter)),
             },
@@ -358,6 +388,26 @@ impl Chart {
                     return Err(RecordError::DuplicateCondition(*condition));
                 }
                 self.conditions.push(Condition { id: *condition, code: code.clone(), onset: *onset });
+            }
+            ClinicalEvent::NoteSigned { note, encounter, title, text, signed, .. } => {
+                if self.notes.iter().any(|n| n.id == *note) {
+                    return Err(RecordError::DuplicateNote(*note));
+                }
+                // A note may be written after the visit ended (a late entry), but only for a visit
+                // that exists on this record.
+                if let Some(enc) = encounter
+                    && !self.encounters.contains_key(enc)
+                {
+                    return Err(RecordError::UnknownEncounter(*enc));
+                }
+                self.notes.push(Note {
+                    id: *note,
+                    encounter: *encounter,
+                    title: title.clone(),
+                    text: text.clone(),
+                    author: recorded.actor.id.clone(),
+                    signed: *signed,
+                });
             }
         }
         self.version = self.version.saturating_add(1);
@@ -453,6 +503,34 @@ mod tests {
         let open = rec(2, ClinicalEvent::EncounterOpened { patient: p, encounter: e, class: EncounterClass::Virtual, start: at(2), reason: None });
         chart.apply(&open).unwrap();
         assert_eq!(chart.apply(&open).unwrap_err(), RecordError::DuplicateEncounter(e));
+    }
+
+    #[test]
+    fn notes_attach_to_existing_encounters_even_after_they_close() {
+        let ids = SequentialIds::default();
+        let p = PatientId::new(&ids);
+        let e = EncounterId::new(&ids);
+        let note = |id: NoteId, enc: EncounterId, text: &str| ClinicalEvent::NoteSigned {
+            patient: p,
+            note: id,
+            encounter: Some(enc),
+            title: "Progress note".into(),
+            text: text.into(),
+            signed: at(9),
+        };
+        let mut chart = Chart::start(&rec(1, ClinicalEvent::PatientRegistered { patient: p, demographics: demo() })).unwrap();
+        let first = NoteId::new(&ids);
+        assert_eq!(chart.apply(&rec(2, note(first, e, "S: well"))).unwrap_err(), RecordError::UnknownEncounter(e));
+        chart
+            .apply(&rec(2, ClinicalEvent::EncounterOpened { patient: p, encounter: e, class: EncounterClass::Ambulatory, start: at(5), reason: None }))
+            .unwrap();
+        assert_eq!(chart.apply(&rec(3, ClinicalEvent::EncounterClosed { patient: p, encounter: e, end: at(4) })).unwrap_err(), RecordError::EndBeforeStart(e));
+        chart.apply(&rec(3, ClinicalEvent::EncounterClosed { patient: p, encounter: e, end: at(6) })).unwrap();
+        chart.apply(&rec(4, note(first, e, "S: well"))).unwrap();
+        assert_eq!(chart.apply(&rec(5, note(first, e, "again"))).unwrap_err(), RecordError::DuplicateNote(first));
+        assert!(chart.apply(&rec(5, note(NoteId::new(&ids), e, "  "))).is_err(), "an empty note is refused");
+        assert_eq!(chart.notes.len(), 1);
+        assert_eq!(chart.notes[0].author, "system");
     }
 
     #[test]

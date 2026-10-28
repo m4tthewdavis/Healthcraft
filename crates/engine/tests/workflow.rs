@@ -20,11 +20,17 @@ fn clinician_charts_a_visit() {
             &json!({"patientId": patient, "encounterId": encounter, "system": "http://loinc.org", "code": "8867-4", "display": "Heart rate", "value": 72, "unit": "/min"}),
         )
         .unwrap();
+    s.dispatch(&dr, "note.sign", &json!({"patientId": patient, "encounterId": encounter, "title": "Progress note", "text": "S: Feels well. Lives with Pat Example at 9 Elm St.\nA/P: Continue current plan."})).unwrap();
     s.dispatch(&dr, "encounter.close", &json!({"patientId": patient, "encounterId": encounter})).unwrap();
     s.dispatch(&dr, "observation.enteredInError", &json!({"patientId": patient, "observationId": obs["observationId"], "reason": "wrong device"})).unwrap();
 
     let chart = s.dispatch(&dr, "patient.chart", &json!({"patientId": patient})).unwrap();
-    assert_eq!(chart["version"], 5);
+    assert_eq!(chart["version"], 6);
+    assert_eq!(chart["notes"][0]["author"], "dr.test");
+    assert_eq!(chart["notes"][0]["encounter"], json!(encounter));
+    // Notes are free text: never part of the de-identified data set.
+    let deid = s.dispatch(&actor(Role::Researcher), "research.deidentify", &Value::Null).unwrap().to_string();
+    assert!(!deid.contains("Elm St") && !deid.contains("Pat Example"));
     assert_eq!(chart["observations"][0]["enteredInError"], "wrong device");
     let fhir = s.dispatch(&dr, "fhir.patient.everything", &json!({"patientId": patient})).unwrap();
     assert_eq!(fhir["entry"][2]["resource"]["status"], "entered-in-error");

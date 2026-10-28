@@ -74,6 +74,10 @@ id_type!(
     ConditionId
 );
 id_type!(
+    /// One signed clinical note.
+    NoteId
+);
+id_type!(
     /// One stored event.
     EventId
 );

@@ -47,6 +47,11 @@ const FIELDS: &[&str] = &[
     "bundle",
     "message",
     "asOf",
+    "start",
+    "end",
+    "title",
+    "text",
+    "signed",
 ];
 
 #[test]

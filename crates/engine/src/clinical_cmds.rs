@@ -1,7 +1,7 @@
 //! Encounters, observations and the problem list.
 
 use chrono::NaiveDate;
-use healthcraft_core::{Actor, ConditionId, EncounterId, ObservationId, PatientId, Timestamp};
+use healthcraft_core::{Actor, ConditionId, EncounterId, NoteId, ObservationId, PatientId, Timestamp};
 use healthcraft_record::{ClinicalEvent, EncounterClass, ObservationValue};
 use healthcraft_terminology::{CodeSystem, Coding};
 use serde::Deserialize;
@@ -14,14 +14,14 @@ pub(crate) fn specs() -> Vec<CommandSpec> {
         CommandSpec {
             id: "encounter.open",
             label: "Start encounter",
-            params: r#"{"patientId":uuid,"class":"ambulatory|emergency|inpatient|virtual|home","reason"?:string,"expectedVersion"?:int}"#,
+            params: r#"{"patientId":uuid,"class":"ambulatory|emergency|inpatient|virtual|home","reason"?:string,"start"?:rfc3339,"expectedVersion"?:int}"#,
             access: Access::WriteChart,
             run: open,
         },
         CommandSpec {
             id: "encounter.close",
             label: "End encounter",
-            params: r#"{"patientId":uuid,"encounterId":uuid,"expectedVersion"?:int}"#,
+            params: r#"{"patientId":uuid,"encounterId":uuid,"end"?:rfc3339,"expectedVersion"?:int}"#,
             access: Access::WriteChart,
             run: close,
         },
@@ -40,6 +40,13 @@ pub(crate) fn specs() -> Vec<CommandSpec> {
             run: entered_in_error,
         },
         CommandSpec {
+            id: "note.sign",
+            label: "Sign note",
+            params: r#"{"patientId":uuid,"encounterId"?:uuid,"title":string,"text":string,"signed"?:rfc3339,"expectedVersion"?:int}"#,
+            access: Access::WriteChart,
+            run: sign_note,
+        },
+        CommandSpec {
             id: "condition.record",
             label: "Add to problem list",
             params: r#"{"patientId":uuid,"system":uri,"code":string,"display"?:string,"onset"?:"YYYY-MM-DD","expectedVersion"?:int}"#,
@@ -56,6 +63,9 @@ struct OpenParams {
     class: EncounterClass,
     #[serde(default)]
     reason: Option<String>,
+    /// When the visit started, for visits documented after the fact; default now.
+    #[serde(default)]
+    start: Option<Timestamp>,
     #[serde(default)]
     expected_version: Option<u64>,
 }
@@ -63,7 +73,8 @@ struct OpenParams {
 fn open(session: &Session, actor: &Actor, value: &Value) -> Result<Value, EngineError> {
     let p: OpenParams = params(value)?;
     let encounter = EncounterId::new(session.ids.as_ref());
-    let event = ClinicalEvent::EncounterOpened { patient: p.patient_id, encounter, class: p.class, start: session.clock.now(), reason: p.reason };
+    let start = p.start.unwrap_or_else(|| session.clock.now());
+    let event = ClinicalEvent::EncounterOpened { patient: p.patient_id, encounter, class: p.class, start, reason: p.reason };
     let version = session.append(actor, p.patient_id, p.expected_version, vec![event])?;
     Ok(json!({ "encounterId": encounter, "version": version }))
 }
@@ -74,12 +85,14 @@ struct CloseParams {
     patient_id: PatientId,
     encounter_id: EncounterId,
     #[serde(default)]
+    end: Option<Timestamp>,
+    #[serde(default)]
     expected_version: Option<u64>,
 }
 
 fn close(session: &Session, actor: &Actor, value: &Value) -> Result<Value, EngineError> {
     let p: CloseParams = params(value)?;
-    let event = ClinicalEvent::EncounterClosed { patient: p.patient_id, encounter: p.encounter_id, end: session.clock.now() };
+    let event = ClinicalEvent::EncounterClosed { patient: p.patient_id, encounter: p.encounter_id, end: p.end.unwrap_or_else(|| session.clock.now()) };
     let version = session.append(actor, p.patient_id, p.expected_version, vec![event])?;
     Ok(json!({ "version": version }))
 }
@@ -173,4 +186,34 @@ fn record_condition(session: &Session, actor: &Actor, value: &Value) -> Result<V
     let event = ClinicalEvent::ConditionRecorded { patient: p.patient_id, condition, code, onset: p.onset };
     let version = session.append(actor, p.patient_id, p.expected_version, vec![event])?;
     Ok(json!({ "conditionId": condition, "version": version }))
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct NoteParams {
+    patient_id: PatientId,
+    #[serde(default)]
+    encounter_id: Option<EncounterId>,
+    title: String,
+    text: String,
+    /// When it was signed, for notes imported from elsewhere; default now.
+    #[serde(default)]
+    signed: Option<Timestamp>,
+    #[serde(default)]
+    expected_version: Option<u64>,
+}
+
+fn sign_note(session: &Session, actor: &Actor, value: &Value) -> Result<Value, EngineError> {
+    let p: NoteParams = params(value)?;
+    let note = NoteId::new(session.ids.as_ref());
+    let event = ClinicalEvent::NoteSigned {
+        patient: p.patient_id,
+        note,
+        encounter: p.encounter_id,
+        title: p.title,
+        text: p.text,
+        signed: p.signed.unwrap_or_else(|| session.clock.now()),
+    };
+    let version = session.append(actor, p.patient_id, p.expected_version, vec![event])?;
+    Ok(json!({ "noteId": note, "version": version }))
 }

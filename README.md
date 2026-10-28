@@ -38,7 +38,7 @@ export that is stale by the time it arrives. HealthCraft builds research into th
 
 | Area | Status |
 |---|---|
-| Event-sourced clinical record (patients, encounters, observations, problem list, amendments, entered-in-error) | ✅ with invariants enforced on every write |
+| Event-sourced clinical record (patients, encounters, observations, problem list, signed notes, amendments, entered-in-error) | ✅ with invariants enforced on every write |
 | Optimistic concurrency (two clinicians can never silently overwrite each other) | ✅ |
 | Role-based access (clinician, researcher, admin, system) on every command | ✅ |
 | Tamper-evident, hash-chained access log of every call, including refusals | ✅ |
@@ -47,9 +47,9 @@ export that is stale by the time it arrives. HealthCraft builds research into th
 | HL7 v2 parser (hardened) and ORU^R01 lab-result import | ✅ |
 | OMOP CDM v5.4 export (person, visit, measurement, observation, condition) as CSV | ✅ source codes; standard concepts need the OHDSI vocabulary |
 | HIPAA Safe Harbor de-identification (dates to year, 90+ ages, ZIP3, free text removed, random research ids) | ✅ |
-| Clinician UI (egui), desktop and browser (WebAssembly) | ✅ patient list, read-only chart, de-identified research view, access log, demo role switcher |
+| Clinician UI (egui), desktop and browser (WebAssembly) | ✅ patient banner; Summary, Encounters, Notes and Results (flowsheet) tabs; start and end visits; write and sign notes; de-identified research view; access log; demo role switcher |
 | HTTP API (FHIR routes + command dispatch, bearer tokens) | ✅ development-grade auth |
-| Durable storage, SMART on FHIR / OAuth, orders, notes, scheduling, billing, e-prescribing | ⏳ see [ROADMAP.md](ROADMAP.md) |
+| Durable storage, SMART on FHIR / OAuth, orders, medications, scheduling, billing, e-prescribing | ⏳ see [ROADMAP.md](ROADMAP.md) |
 
 ## Get started
 
