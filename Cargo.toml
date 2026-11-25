@@ -31,7 +31,7 @@ serde_json = "1"
 # All date/time handling goes through chrono (AGENTS.md); no hand-rolled calendar math.
 chrono = { version = "0.4", default-features = false, features = ["std", "serde"] }
 uuid = { version = "1", features = ["serde"] }
-sha2 = "0.10"
+sha2 = "0.11"
 clap = { version = "4", features = ["derive", "env"] }
 log = "0.4"
 axum = "0.8"
